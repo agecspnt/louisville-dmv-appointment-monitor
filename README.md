@@ -112,6 +112,7 @@ Notes:
 
 - `ci.yml`: runs tests on push and pull requests.
 - `build-desktop.yml`: builds Windows and macOS artifacts in parallel, uploads build outputs.
+- `release.yml`: when a GitHub Release is published, automatically builds and attaches Windows/macOS installers to that Release.
 
 ## Security and Responsible Use
 
