@@ -39,6 +39,8 @@ jobs:
         run: npx playwright install chromium
 
       - name: Build installers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
