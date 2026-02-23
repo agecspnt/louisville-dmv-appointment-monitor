@@ -4,6 +4,34 @@
 
 Desktop app built with Electron + Playwright to monitor Kentucky DMV appointment availability for selected appointment types.
 
+## About
+
+`louisville-dmv-appointment-monitor` is an open-source desktop utility focused on one practical goal: helping users in Louisville, Kentucky check DMV appointment availability faster and more consistently.
+
+It combines a local Electron app with Playwright browser automation, so users can:
+
+- run one-time checks when needed
+- run continuous monitoring with randomized intervals
+- receive desktop and Bark notifications when availability appears
+
+This project is designed for:
+
+- residents who repeatedly check for appointment openings
+- contributors interested in reliable desktop automation patterns
+- developers who want a clear Electron + Playwright reference architecture
+
+Design principles:
+
+- local-first execution (your checks run on your machine)
+- simple, inspectable workflow (no hidden cloud backend)
+- fail-safe behavior (error caps, explicit status logs, clear stop controls)
+
+Important boundaries:
+
+- this tool does not bypass authentication or payment systems
+- this tool does not guarantee appointment acquisition
+- users must comply with DMV website terms and applicable laws
+
 ## Features
 
 - One-click manual check (`Check Once`).
