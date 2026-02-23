@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DMV Appointment Monitor</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <h1>DMV Appointment Monitor</h1>
+      </header>
+
+      <section class="panel controls">
+        <div class="row">
+          <label for="appointmentType">Appointment Type</label>
+          <select id="appointmentType">
+            <option value="permit">Written Test (56)</option>
+            <option value="road_test">Road Test (55)</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="intervalSec">Base Interval (sec)</label>
+          <input id="intervalSec" type="number" min="1" value="60" />
+        </div>
+
+        <div class="row">
+          <label for="headless">Headless</label>
+          <input id="headless" type="checkbox" checked />
+        </div>
+
+        <div class="row grow">
+          <label for="barkKey">Bark Key</label>
+          <input id="barkKey" type="text" placeholder="Optional" />
+          <button id="testBarkBtn" class="btn secondary">Test Bark</button>
+        </div>
+
+        <div class="actions">
+          <button id="startBtn" class="btn primary">Start Monitoring</button>
+          <button id="stopBtn" class="btn danger" disabled>Stop</button>
+          <button id="checkBtn" class="btn secondary">Check Once</button>
+          <button id="openPageBtn" class="btn secondary">Open DMV Page</button>
+        </div>
+      </section>
+
+      <section class="panel status">
+        <div id="statusText">Status: Idle</div>
+        <div id="lastCheck">Last check: N/A</div>
+        <div id="availability">Availability: Unknown</div>
+      </section>
+
+      <section class="panel logs">
+        <div class="logs-title">Logs</div>
+        <pre id="logView"></pre>
+      </section>
+    </div>
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+{
+  "name": "dmv-appointment-monitor-electron",
+  "version": "1.0.0",
+  "description": "Desktop monitor for Kentucky DMV appointment availability (Electron + Playwright)",
+  "main": "electron/main.js",
+  "author": "DMV Appointment Monitor contributors",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "electron",
+    "playwright",
+    "dmv",
+    "appointment-monitor",
+    "desktop-app"
+  ],
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "test": "node --test",
+    "build:win": "electron-builder --win nsis portable",
+    "build:mac": "electron-builder --mac dmg zip",
+    "build:all": "node scripts/build-all.mjs"
+  },
+  "build": {
+    "appId": "com.local.dmv.monitor",
+    "productName": "DMV Appointment Monitor",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    }
+  },
+  "dependencies": {
+    "playwright": "^1.53.1"
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^25.1.8"
+  }
+}

@@ -1,0 +1,151 @@
+:root {
+  --bg: #f5f7fb;
+  --panel: #ffffff;
+  --text: #101828;
+  --muted: #475467;
+  --border: #d0d5dd;
+  --primary: #0f766e;
+  --danger: #b42318;
+  --secondary: #344054;
+  --success: #067647;
+  --warning: #b54708;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at top right, #c7f9f0, #f5f7fb 50%);
+}
+
+.app {
+  width: min(1100px, 94vw);
+  margin: 24px auto;
+  display: grid;
+  gap: 16px;
+}
+
+.topbar {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.controls {
+  display: grid;
+  gap: 10px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 220px 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.row.grow input[type="text"] {
+  width: 100%;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+input,
+select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 14px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: var(--primary);
+}
+
+.btn.secondary {
+  background: var(--secondary);
+}
+
+.btn.danger {
+  background: var(--danger);
+}
+
+.status {
+  display: grid;
+  gap: 6px;
+}
+
+#availability.ok {
+  color: var(--success);
+}
+
+#availability.no {
+  color: var(--danger);
+}
+
+#availability.unknown {
+  color: var(--warning);
+}
+
+.logs-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+#logView {
+  margin: 0;
+  height: 340px;
+  overflow: auto;
+  padding: 10px;
+  background: #0b1220;
+  color: #d1e0ff;
+  border-radius: 8px;
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  border: 1px solid #22304a;
+}
+
+@media (max-width: 780px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
