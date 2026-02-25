@@ -20,8 +20,8 @@
     "dev": "electron .",
     "test": "node --test",
     "test:live": "node --test tests/live.integration.test.js",
-    "build:win": "npm test && electron-builder --win nsis portable",
-    "build:mac": "npm test && electron-builder --mac dmg zip",
+    "build:win": "npm test && electron-builder --publish never --win nsis portable",
+    "build:mac": "npm test && electron-builder --publish never --mac dmg zip",
     "build:all": "node scripts/build-all.mjs"
   },
   "build": {
