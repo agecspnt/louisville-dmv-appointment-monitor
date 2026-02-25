@@ -46,7 +46,7 @@
     "playwright": "^1.53.1"
   },
   "devDependencies": {
-    "electron": "^37.2.6",
+    "electron": "^40.6.1",
     "electron-builder": "^25.1.8"
   }
 }
