@@ -19,8 +19,8 @@
     "start": "electron .",
     "dev": "electron .",
     "test": "node --test",
-    "build:win": "electron-builder --win nsis portable",
-    "build:mac": "electron-builder --mac dmg zip",
+    "build:win": "npm test && electron-builder --win nsis portable",
+    "build:mac": "npm test && electron-builder --mac dmg zip",
     "build:all": "node scripts/build-all.mjs"
   },
   "build": {

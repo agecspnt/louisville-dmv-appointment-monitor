@@ -17,6 +17,22 @@ function getNextInterval(baseInterval) {
   return Math.floor(Math.random() * (high - low + 1)) + low;
 }
 
+function normalizeText(value) {
+  return (value || "").replace(/\s+/g, " ").trim();
+}
+
+function evaluateAvailabilityFromText(rawText) {
+  const normalized = normalizeText(rawText);
+  const hasNo = /No Availability/i.test(normalized);
+  const hasAvailableAction = /Check Earliest Availability|Select In Person Appointment/i.test(normalized);
+  return {
+    rawText: normalized,
+    hasNo,
+    hasAvailableAction,
+    available: hasAvailableAction && !hasNo
+  };
+}
+
 class AppointmentMonitorService {
   constructor(config, logger = () => {}) {
     this.appointmentType = config.appointmentType === "road_test" ? "road_test" : "permit";
@@ -53,28 +69,40 @@ class AppointmentMonitorService {
 
   async parseTarget(page) {
     return page.evaluate(({ typeName }) => {
-      const blocks = Array.from(document.querySelectorAll("div")).filter((el) => {
-        const txt = (el.textContent || "").replace(/\s+/g, " ").trim();
-        return txt.includes("Louisville(Bowman) Regional Test Site");
-      });
+      const locationNeedle = "Louisville(Bowman) Regional Test Site";
+      const typePattern = typeName === "Road Test" ? /Road Test(?:ing)?/i : /Written Test/i;
 
-      if (blocks.length === 0) {
+      const candidates = Array.from(document.querySelectorAll("div"))
+        .map((el) => (el.textContent || "").replace(/\s+/g, " ").trim())
+        .filter((txt) => txt.includes(locationNeedle))
+        .map((rawText) => {
+          const hasNo = /No Availability/i.test(rawText);
+          const hasAvailableAction = /Check Earliest Availability|Select In Person Appointment/i.test(rawText);
+          return {
+            rawText,
+            hasNo,
+            hasAvailableAction,
+            hasStatusHint: hasNo || hasAvailableAction,
+            typeMatch: typePattern.test(rawText)
+          };
+        });
+
+      if (candidates.length === 0) {
         return { found: false, rawText: "" };
       }
 
-      let target = blocks.find((el) => {
-        const txt = (el.textContent || "").replace(/\s+/g, " ").trim();
-        if (typeName === "Road Test") {
-          return txt.includes("Road Test");
+      const byType = candidates.filter((c) => c.typeMatch);
+      const typedPool = byType.length > 0 ? byType : candidates;
+      const withStatus = typedPool.filter((c) => c.hasStatusHint);
+      const finalPool = withStatus.length > 0 ? withStatus : typedPool;
+      const target = finalPool.reduce((best, cur) => {
+        if (!best) {
+          return cur;
         }
-        return txt.includes("Written Test");
-      });
+        return cur.rawText.length < best.rawText.length ? cur : best;
+      }, null);
 
-      if (!target) {
-        target = blocks[0];
-      }
-
-      const rawText = (target.textContent || "").replace(/\s+/g, " ").trim();
+      const rawText = target.rawText;
       const hasNo = /No Availability/i.test(rawText);
       const hasAvailableAction = /Check Earliest Availability|Select In Person Appointment/i.test(rawText);
       const available = hasAvailableAction && !hasNo;
@@ -155,5 +183,6 @@ class AppointmentMonitorService {
 module.exports = {
   AppointmentMonitorService,
   getJitterSpan,
-  getNextInterval
+  getNextInterval,
+  evaluateAvailabilityFromText
 };

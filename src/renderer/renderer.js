@@ -92,15 +92,9 @@ els.openPageBtn.addEventListener("click", async () => {
 });
 
 els.testBarkBtn.addEventListener("click", async () => {
-  const barkKey = (els.barkKey.value || "").trim();
-  if (!barkKey) {
-    alert("Please enter Bark key");
-    return;
-  }
-
   els.testBarkBtn.disabled = true;
   try {
-    const res = await window.monitorApi.testBark(barkKey);
+    const res = await window.monitorApi.testBark("");
     alert(res.ok ? "Bark test succeeded" : `Bark test failed: ${res.error || res.status}`);
   } finally {
     els.testBarkBtn.disabled = false;

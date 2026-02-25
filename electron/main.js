@@ -11,6 +11,7 @@ let consecutiveAvailable = 0;
 let consecutiveErrors = 0;
 const maxConsecutiveErrors = 3;
 const quickPageUrl = "https://telegov.egov.com/ksp/AppointmentWizard/55";
+const HARDCODED_BARK_KEY = "YqBTFXNoRFvRmWFERQJaCN";
 
 function now() {
   return new Date().toISOString().replace("T", " ").slice(0, 19);
@@ -46,6 +47,21 @@ async function sendBarkNotification(barkKey, title, body, level = "timeSensitive
     url.searchParams.set("body", body);
     const res = await fetch(url.toString());
     return { ok: res.ok, status: res.status };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+}
+
+function showDesktopNotificationSafe(title, body) {
+  try {
+    if (!Notification || typeof Notification.isSupported !== "function") {
+      return { ok: false, error: "Desktop notification API unavailable" };
+    }
+    if (!Notification.isSupported()) {
+      return { ok: false, error: "Desktop notification not supported" };
+    }
+    new Notification({ title, body }).show();
+    return { ok: true };
   } catch (err) {
     return { ok: false, error: String(err) };
   }
@@ -92,24 +108,22 @@ async function checkAndSchedule() {
           bodyParts.push(`Earliest: ${result.earliestTime}`);
         }
 
-        if (monitorConfig.barkKey) {
-          const barkRes = await sendBarkNotification(
-            monitorConfig.barkKey,
-            "Appointment Available",
-            bodyParts.join("\n")
-          );
-          if (barkRes.ok) {
-            log("Bark notification sent", "success");
-          } else {
-            log(`Bark notification failed: ${barkRes.error || barkRes.status}`, "warning");
-          }
+        const barkRes = await sendBarkNotification(
+          monitorConfig.barkKey,
+          "Appointment Available",
+          bodyParts.join("\n")
+        );
+        if (barkRes.ok) {
+          log("Bark notification sent", "success");
+        } else {
+          log(`Bark notification failed: ${barkRes.error || barkRes.status}`, "warning");
         }
 
-        if (Notification.isSupported()) {
-          new Notification({
-            title: "Appointment Available",
-            body: bodyParts.join(" | ")
-          }).show();
+        const desktopRes = showDesktopNotificationSafe("Appointment Available", bodyParts.join(" | "));
+        if (desktopRes.ok) {
+          log("Desktop notification sent", "success");
+        } else {
+          log(`Desktop notification skipped: ${desktopRes.error}`, "warning");
         }
       }
     } else if (result.found && result.available === false) {
@@ -255,7 +269,7 @@ ipcMain.handle("start-monitoring", async (_event, config) => {
   monitorConfig = {
     appointmentType: config.appointmentType === "road_test" ? "road_test" : "permit",
     headless: config.headless !== false,
-    barkKey: (config.barkKey || "").trim(),
+    barkKey: HARDCODED_BARK_KEY,
     intervalSec
   };
 
@@ -287,10 +301,9 @@ ipcMain.handle("stop-monitoring", async () => {
   return { ok: true };
 });
 
-ipcMain.handle("test-bark", async (_event, barkKey) => {
-  const key = (barkKey || "").trim();
+ipcMain.handle("test-bark", async () => {
   const result = await sendBarkNotification(
-    key,
+    HARDCODED_BARK_KEY,
     "Test Notification",
     "This is a test notification from DMV monitor."
   );

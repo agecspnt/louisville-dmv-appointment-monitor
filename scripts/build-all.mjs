@@ -14,6 +14,8 @@ function run(cmd, args) {
 
 const target = process.env.BUILD_TARGET || "all";
 
+run("npm", ["test"]);
+
 if (target === "win") {
   run("npx", ["electron-builder", "--win", "nsis", "portable"]);
 } else if (target === "mac") {
