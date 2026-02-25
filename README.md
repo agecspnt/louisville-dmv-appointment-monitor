@@ -76,6 +76,10 @@ Windows helper:
 
 This project is now Windows-only for build and release workflows.
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=agecspnt/louisville-dmv-appointment-monitor&type=date&legend=top-left)](https://www.star-history.com/#agecspnt/louisville-dmv-appointment-monitor&type=date&legend=top-left)
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
