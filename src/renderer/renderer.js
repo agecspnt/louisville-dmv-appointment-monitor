@@ -1,5 +1,7 @@
 const els = {
   appointmentType: document.getElementById("appointmentType"),
+  locationName: document.getElementById("locationName"),
+  refreshLocationsBtn: document.getElementById("refreshLocationsBtn"),
   intervalSec: document.getElementById("intervalSec"),
   headless: document.getElementById("headless"),
   barkKey: document.getElementById("barkKey"),
@@ -10,6 +12,7 @@ const els = {
   testBarkBtn: document.getElementById("testBarkBtn"),
   statusText: document.getElementById("statusText"),
   lastCheck: document.getElementById("lastCheck"),
+  earliestTime: document.getElementById("earliestTime"),
   availability: document.getElementById("availability"),
   logView: document.getElementById("logView")
 };
@@ -17,6 +20,7 @@ const els = {
 function cfg() {
   return {
     appointmentType: els.appointmentType.value,
+    locationName: (els.locationName.value || "").trim(),
     intervalSec: Number(els.intervalSec.value || 60),
     headless: Boolean(els.headless.checked),
     barkKey: (els.barkKey.value || "").trim()
@@ -25,7 +29,11 @@ function cfg() {
 
 function logLine(payload) {
   const line = `[${payload.timestamp}] [${payload.level.toUpperCase()}] ${payload.message}`;
-  els.logView.textContent += `${line}\n`;
+  const level = String(payload.level || "info").toLowerCase();
+  const entry = document.createElement("div");
+  entry.className = `log-line log-${level}`;
+  entry.textContent = line;
+  els.logView.appendChild(entry);
   els.logView.scrollTop = els.logView.scrollHeight;
 }
 
@@ -48,12 +56,71 @@ function setAvailability(availability) {
 function setRunningState(isRunning) {
   els.startBtn.disabled = isRunning;
   els.stopBtn.disabled = !isRunning;
+  els.appointmentType.disabled = isRunning;
+  els.locationName.disabled = isRunning || els.locationName.options.length === 0;
+  els.refreshLocationsBtn.disabled = isRunning;
+}
+
+function setLocationOptions(locations) {
+  els.locationName.innerHTML = "";
+
+  if (!Array.isArray(locations) || locations.length === 0) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No locations found";
+    els.locationName.appendChild(opt);
+    return;
+  }
+
+  locations.forEach((name) => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    els.locationName.appendChild(opt);
+  });
+}
+
+function setLocationLoading() {
+  els.locationName.innerHTML = "";
+  const opt = document.createElement("option");
+  opt.value = "";
+  opt.textContent = "Loading locations...";
+  els.locationName.appendChild(opt);
+}
+
+async function loadLocations() {
+  els.refreshLocationsBtn.disabled = true;
+  els.locationName.disabled = true;
+  setLocationLoading();
+
+  try {
+    const res = await window.monitorApi.fetchLocations({
+      appointmentType: els.appointmentType.value,
+      headless: true
+    });
+
+    if (!res.ok) {
+      setLocationOptions([]);
+      alert(res.error || "Failed to fetch locations");
+      return;
+    }
+
+    setLocationOptions(res.locations || []);
+  } finally {
+    const isRunning = els.stopBtn.disabled === false;
+    els.refreshLocationsBtn.disabled = isRunning;
+    els.locationName.disabled = isRunning || els.locationName.options.length === 0;
+  }
 }
 
 els.startBtn.addEventListener("click", async () => {
   const interval = Number(els.intervalSec.value || 60);
   if (!Number.isFinite(interval) || interval < 1) {
     alert("Interval must be >= 1");
+    return;
+  }
+  if (!els.locationName.value) {
+    alert("Please select an appointment location");
     return;
   }
 
@@ -68,6 +135,11 @@ els.stopBtn.addEventListener("click", async () => {
 });
 
 els.checkBtn.addEventListener("click", async () => {
+  if (!els.locationName.value) {
+    alert("Please select an appointment location");
+    return;
+  }
+
   els.checkBtn.disabled = true;
   try {
     const res = await window.monitorApi.checkOnce(cfg());
@@ -101,11 +173,20 @@ els.testBarkBtn.addEventListener("click", async () => {
   }
 });
 
+els.appointmentType.addEventListener("change", async () => {
+  await loadLocations();
+});
+
+els.refreshLocationsBtn.addEventListener("click", async () => {
+  await loadLocations();
+});
+
 window.monitorApi.onLog(logLine);
 
 window.monitorApi.onStatus((payload) => {
   els.statusText.textContent = `Status: ${payload.status}`;
   els.lastCheck.textContent = `Last check: ${payload.lastCheck || "N/A"}`;
+  els.earliestTime.textContent = `Earliest: ${payload.earliestTime || "N/A"}`;
   setAvailability(payload.availability);
 });
 
@@ -115,3 +196,7 @@ window.monitorApi.onMonitoringState((payload) => {
 
 setRunningState(false);
 setAvailability(null);
+loadLocations().catch((err) => {
+  setLocationOptions([]);
+  alert(`Failed to load locations: ${String(err)}`);
+});

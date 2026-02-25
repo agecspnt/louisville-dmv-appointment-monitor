@@ -2,134 +2,74 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-Desktop app built with Electron + Playwright to monitor Kentucky DMV appointment availability for selected appointment types.
+English (default) | [简体中文](./README.zh-CN.md)
 
-## About
+Desktop app built with Electron + Playwright to monitor Kentucky DMV appointment availability.
 
-`louisville-dmv-appointment-monitor` is an open-source desktop utility focused on one practical goal: helping users in Louisville, Kentucky check DMV appointment availability faster and more consistently.
+## Highlights
 
-It combines a local Electron app with Playwright browser automation, so users can:
+- Supports `Written Test (56)` and `Road Test (55)`.
+- After choosing `Appointment Type`, the app fetches all live locations from DMV and lets you select one.
+- Real availability check per selected location.
+- When availability is found:
+  - green success logs in UI
+  - desktop notification
+  - Bark push notification (with location, status, check time, earliest info)
+- Real click on `Check Earliest Availability` and extraction of earliest returned info (for example `February 26, 16 available`).
+- Build is test-gated: tests must pass before packaging.
 
-- run one-time checks when needed
-- run continuous monitoring with randomized intervals
-- receive desktop and Bark notifications when availability appears
+## Requirements
 
-This project is designed for:
-
-- residents who repeatedly check for appointment openings
-- contributors interested in reliable desktop automation patterns
-- developers who want a clear Electron + Playwright reference architecture
-
-Design principles:
-
-- local-first execution (your checks run on your machine)
-- simple, inspectable workflow (no hidden cloud backend)
-- fail-safe behavior (error caps, explicit status logs, clear stop controls)
-
-Important boundaries:
-
-- this tool does not bypass authentication or payment systems
-- this tool does not guarantee appointment acquisition
-- users must comply with DMV website terms and applicable laws
-
-## Features
-
-- One-click manual check (`Check Once`).
-- Continuous monitoring mode with randomized intervals to reduce fixed polling patterns.
-- Appointment types:
-  - `permit` (wizard ID `56`)
-  - `road_test` (wizard ID `55`)
-- Desktop notifications and optional Bark push notifications.
-- Fast shortcut to open the DMV page and auto-fill location search.
-
-## Tech Stack
-
-- Electron (desktop app shell)
-- Playwright (browser automation and page parsing)
-- GitHub Actions (CI and cross-platform build automation)
-
-## Project Structure
-
-- `electron/main.js`: app lifecycle, scheduling, IPC handlers, notifications
-- `electron/preload.js`: secure bridge API exposed to renderer
-- `src/renderer/*`: desktop UI
-- `src/services/monitor.js`: monitoring and parsing logic
-- `scripts/build-all.mjs`: cross-platform build helper
-- `.github/workflows/*.yml`: CI and release build pipelines
+- Node.js `>=20`
+- npm
 
 ## Quick Start
-
-### Prerequisites
-
-- Node.js 20+
-- npm 10+
-
-### Install
 
 ```bash
 npm install
 npx playwright install chromium
+npm start
 ```
 
-### Run Locally
+## Scripts
 
-```bash
-npm run start
-```
+- `npm test`
+  Runs all tests, including live DMV web integration test.
+- `npm run test:live`
+  Runs only the live DMV integration test.
+- `npm run build:win`
+  Test-gated Windows build.
+- `npm run build:mac`
+  Test-gated macOS build.
+- `npm run build:all`
+  Test-gated platform-aware build helper.
 
-### Test
+Windows helper:
 
-```bash
-npm run test
-```
+- `build_auto.bat`
+  Installs deps, installs Playwright Chromium, runs tests, then builds.
 
-## Build
+## Project Layout
 
-Windows:
+- `electron/main.js`: scheduler, notifications, IPC handlers
+- `electron/preload.js`: renderer bridge API
+- `src/services/monitor.js`: scraping, parsing, location/availability logic
+- `src/renderer/*`: UI
+- `tests/*.test.js`: unit and live integration tests
 
-```bash
-npm run build:win
-```
+## Notes
 
-macOS:
-
-```bash
-npm run build:mac
-```
-
-Build with platform-aware helper:
-
-```bash
-npm run build:all
-```
-
-Notes:
-
-- On Windows, `build:all` builds Windows artifacts and reminds that macOS artifacts must be built on macOS.
-- True parallel multi-OS packaging is handled by GitHub Actions matrix builds.
-
-## CI/CD
-
-- `ci.yml`: runs tests on push and pull requests.
-- `build-desktop.yml`: builds Windows and macOS artifacts in parallel, uploads build outputs.
-- `release.yml`: when a GitHub Release is published, automatically builds and attaches Windows/macOS installers to that Release.
-
-## Security and Responsible Use
-
-- This project is for informational monitoring and convenience.
-- Users are responsible for complying with DMV website terms and local regulations.
-- Do not abuse remote services with aggressive request rates.
-
-Please report vulnerabilities through [SECURITY.md](./SECURITY.md), not via public issues.
+- This tool does not guarantee getting an appointment.
+- Users are responsible for following DMV website terms and local regulations.
 
 ## Contributing
 
-Contributions are welcome. Start with [CONTRIBUTING.md](./CONTRIBUTING.md).
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Code of Conduct
+## Security
 
-Community participation is governed by [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+Report vulnerabilities via [SECURITY.md](./SECURITY.md).
 
 ## License
 
-MIT License. See [LICENSE](./LICENSE).
+MIT. See [LICENSE](./LICENSE).

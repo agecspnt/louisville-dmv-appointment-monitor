@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld("monitorApi", {
   checkOnce: (config) => ipcRenderer.invoke("check-once", config),
   startMonitoring: (config) => ipcRenderer.invoke("start-monitoring", config),
   stopMonitoring: () => ipcRenderer.invoke("stop-monitoring"),
+  fetchLocations: (config) => ipcRenderer.invoke("fetch-locations", config),
   testBark: (barkKey) => ipcRenderer.invoke("test-bark", barkKey),
   openAppointmentPage: () => ipcRenderer.invoke("open-appointment-page"),
   onLog: (handler) => {

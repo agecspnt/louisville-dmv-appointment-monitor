@@ -22,6 +22,12 @@
         </div>
 
         <div class="row">
+          <label for="locationName">Appointment Location</label>
+          <select id="locationName"></select>
+          <button id="refreshLocationsBtn" class="btn secondary">Refresh Locations</button>
+        </div>
+
+        <div class="row">
           <label for="intervalSec">Base Interval (sec)</label>
           <input id="intervalSec" type="number" min="1" value="60" />
         </div>
@@ -48,12 +54,13 @@
       <section class="panel status">
         <div id="statusText">Status: Idle</div>
         <div id="lastCheck">Last check: N/A</div>
+        <div id="earliestTime">Earliest: N/A</div>
         <div id="availability">Availability: Unknown</div>
       </section>
 
       <section class="panel logs">
         <div class="logs-title">Logs</div>
-        <pre id="logView"></pre>
+        <div id="logView"></div>
       </section>
     </div>
 

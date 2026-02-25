@@ -144,6 +144,26 @@ select {
   border: 1px solid #22304a;
 }
 
+.log-line {
+  line-height: 1.45;
+}
+
+.log-success {
+  color: #35d38a;
+}
+
+.log-warning {
+  color: #f6b347;
+}
+
+.log-error {
+  color: #ff7b7b;
+}
+
+.log-info {
+  color: #c4d3ff;
+}
+
 @media (max-width: 780px) {
   .row {
     grid-template-columns: 1fr;

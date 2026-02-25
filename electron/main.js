@@ -42,9 +42,12 @@ async function sendBarkNotification(barkKey, title, body, level = "timeSensitive
   }
 
   try {
-    const url = new URL(`https://api.day.app/${barkKey}/${encodeURIComponent(title)}`);
+    const safeTitle = encodeURIComponent(title || "Notification");
+    const safeBody = encodeURIComponent(body || "");
+    const url = new URL(`https://api.day.app/${barkKey}/${safeTitle}/${safeBody}`);
     url.searchParams.set("level", level);
-    url.searchParams.set("body", body);
+    // Keep body in query as fallback for clients/proxies that strip path content.
+    url.searchParams.set("body", body || "");
     const res = await fetch(url.toString());
     return { ok: res.ok, status: res.status };
   } catch (err) {
@@ -98,14 +101,21 @@ async function checkAndSchedule() {
       consecutiveAvailable += 1;
       updateStatus("Monitoring", true, { earliestTime: result.earliestTime || null });
       log(`Status: ${result.status}`, "success");
+      if (result.earliestTime) {
+        log(`Earliest: ${result.earliestTime}`, "success");
+      }
 
       if (consecutiveAvailable === 1) {
         const bodyParts = [
           "Detected available appointment.",
+          `Location: ${monitorConfig.locationName || "Unknown"}`,
+          `Status: ${result.status || "Available appointment found"}`,
           `Check time: ${result.timestamp || now()}`
         ];
         if (result.earliestTime) {
           bodyParts.push(`Earliest: ${result.earliestTime}`);
+        } else {
+          bodyParts.push("Earliest: unavailable");
         }
 
         const barkRes = await sendBarkNotification(
@@ -269,12 +279,14 @@ ipcMain.handle("start-monitoring", async (_event, config) => {
   monitorConfig = {
     appointmentType: config.appointmentType === "road_test" ? "road_test" : "permit",
     headless: config.headless !== false,
+    locationName: String(config.locationName || "").trim(),
     barkKey: HARDCODED_BARK_KEY,
     intervalSec
   };
 
   const jitter = getJitterSpan(intervalSec);
   log("Starting monitoring...", "info");
+  log(`Location: ${monitorConfig.locationName || "N/A"}`, "info");
   log(`Base interval: ${intervalSec}s`, "info");
   log(`Random interval: ${Math.max(1, intervalSec - jitter)} - ${intervalSec + jitter}s`, "info");
 
@@ -313,6 +325,21 @@ ipcMain.handle("test-bark", async () => {
     log(`Bark test failed: ${result.error || result.status}`, "error");
   }
   return result;
+});
+
+ipcMain.handle("fetch-locations", async (_event, config) => {
+  const service = new AppointmentMonitorService(config || {}, log);
+  try {
+    log(`Fetching locations for ${service.typeName}...`, "info");
+    const result = await service.fetchLocations();
+    log(`Fetched ${result.locations.length} locations`, "success");
+    return { ok: true, ...result };
+  } catch (err) {
+    log(`Fetch locations failed: ${String(err)}`, "error");
+    return { ok: false, error: String(err), locations: [] };
+  } finally {
+    await service.cleanup();
+  }
 });
 
 ipcMain.handle("open-appointment-page", async () => {
