@@ -51,10 +51,8 @@ npm start
   Runs only the live DMV integration test.
 - `npm run build:win`
   Test-gated Windows build.
-- `npm run build:mac`
-  Test-gated macOS build.
 - `npm run build:all`
-  Test-gated platform-aware build helper.
+  Alias of Windows build flow (Windows only).
 
 Windows helper:
 
@@ -74,17 +72,9 @@ Windows helper:
 - This tool does not guarantee getting an appointment.
 - Users are responsible for following DMV website terms and local regulations.
 
-## macOS Release Signing
+## Platform Support
 
-To avoid macOS showing the app as damaged, release builds must be signed and notarized.
-
-Set these repository secrets for the `Release Installers` workflow:
-
-- `CSC_LINK`
-- `CSC_KEY_PASSWORD`
-- `APPLE_ID`
-- `APPLE_APP_SPECIFIC_PASSWORD`
-- `APPLE_TEAM_ID`
+This project is now Windows-only for build and release workflows.
 
 ## Contributing
 

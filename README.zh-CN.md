@@ -51,10 +51,8 @@ npm start
   仅执行真实网页集成测试。
 - `npm run build:win`
   Windows 打包（测试通过后才会继续）。
-- `npm run build:mac`
-  macOS 打包（测试通过后才会继续）。
 - `npm run build:all`
-  跨平台构建辅助脚本（同样带测试门禁）。
+  Windows-only 构建辅助脚本（同样带测试门禁）。
 
 Windows 一键脚本：
 
@@ -74,17 +72,9 @@ Windows 一键脚本：
 - 本工具不保证一定能抢到预约。
 - 请遵守 DMV 网站条款与当地法律法规。
 
-## macOS 发布签名说明
+## 平台支持
 
-如果希望 macOS 安装包不再提示 damaged，需要对 Release 包进行签名与公证（notarization）。
-
-请在仓库 Secrets 中配置以下字段（供 `Release Installers` workflow 使用）：
-
-- `CSC_LINK`
-- `CSC_KEY_PASSWORD`
-- `APPLE_ID`
-- `APPLE_APP_SPECIFIC_PASSWORD`
-- `APPLE_TEAM_ID`
+项目现已调整为仅支持 Windows 构建与发布流程。
 
 ## 贡献
 

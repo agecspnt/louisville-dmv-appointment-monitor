@@ -15,12 +15,8 @@ permissions:
 
 jobs:
   build-and-upload:
-    name: Build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-latest]
+    name: Build (Windows)
+    runs-on: windows-latest
 
     steps:
       - name: Checkout
@@ -41,18 +37,7 @@ jobs:
       - name: Build installers
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ secrets.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        shell: bash
-        run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            npm run build:win
-          else
-            npm run build:mac
-          fi
+        run: npm run build:win
 
       - name: Upload assets to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -61,8 +46,6 @@ jobs:
           files: |
             release/**/*.exe
             release/**/*.msi
-            release/**/*.dmg
-            release/**/*.zip
             release/**/*.blockmap
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

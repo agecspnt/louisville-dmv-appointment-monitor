@@ -30,7 +30,6 @@ if errorlevel 1 (
 
 set "BUILD_TARGET=all"
 if /i "%~1"=="win" set "BUILD_TARGET=win"
-if /i "%~1"=="mac" set "BUILD_TARGET=mac"
 
 echo [1/5] Installing npm dependencies...
 call npm install
@@ -70,7 +69,6 @@ echo Output folder: release
 echo.
 echo Tip:
 echo   build_auto.bat win   ^(only Windows build^)
-echo   build_auto.bat mac   ^(only macOS build, run on macOS^)
 echo ========================================
 pause
 exit /b 0
