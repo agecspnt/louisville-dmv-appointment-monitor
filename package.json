@@ -27,6 +27,7 @@
   "build": {
     "appId": "com.local.dmv.monitor",
     "productName": "DMV Appointment Monitor",
+    "afterSign": "scripts/notarize.js",
     "directories": {
       "output": "release"
     },
@@ -44,6 +45,10 @@
     },
     "mac": {
       "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "config/entitlements.mac.plist",
+      "entitlementsInherit": "config/entitlements.mac.plist",
       "target": [
         "dmg",
         "zip"
@@ -54,6 +59,7 @@
     "playwright": "^1.53.1"
   },
   "devDependencies": {
+    "@electron/notarize": "^3.1.1",
     "electron": "^37.2.6",
     "electron-builder": "^25.1.8"
   }

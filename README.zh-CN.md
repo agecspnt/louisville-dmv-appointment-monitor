@@ -74,6 +74,18 @@ Windows 一键脚本：
 - 本工具不保证一定能抢到预约。
 - 请遵守 DMV 网站条款与当地法律法规。
 
+## macOS 发布签名说明
+
+如果希望 macOS 安装包不再提示 damaged，需要对 Release 包进行签名与公证（notarization）。
+
+请在仓库 Secrets 中配置以下字段（供 `Release Installers` workflow 使用）：
+
+- `CSC_LINK`
+- `CSC_KEY_PASSWORD`
+- `APPLE_ID`
+- `APPLE_APP_SPECIFIC_PASSWORD`
+- `APPLE_TEAM_ID`
+
 ## 贡献
 
 参见 [CONTRIBUTING.md](./CONTRIBUTING.md)。

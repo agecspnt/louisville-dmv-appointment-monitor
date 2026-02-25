@@ -74,6 +74,18 @@ Windows helper:
 - This tool does not guarantee getting an appointment.
 - Users are responsible for following DMV website terms and local regulations.
 
+## macOS Release Signing
+
+To avoid macOS showing the app as damaged, release builds must be signed and notarized.
+
+Set these repository secrets for the `Release Installers` workflow:
+
+- `CSC_LINK`
+- `CSC_KEY_PASSWORD`
+- `APPLE_ID`
+- `APPLE_APP_SPECIFIC_PASSWORD`
+- `APPLE_TEAM_ID`
+
 ## Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md).
