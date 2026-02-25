@@ -1,4 +1,4 @@
-# DMV Appointment Monitor
+﻿# DMV Appointment Monitor
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
@@ -6,16 +6,28 @@ English (default) | [简体中文](./README.zh-CN.md)
 
 Desktop app built with Electron + Playwright to monitor Kentucky DMV appointment availability.
 
+## App Preview
+
+<p align="center">
+  <img src="./docs/images/app-screenshot.png" alt="DMV Appointment Monitor screenshot" width="1100" />
+</p>
+
+<p align="center">
+  <strong>Live Location Picker</strong> · <strong>Real Earliest Lookup</strong> · <strong>Green Success Logs</strong> · <strong>Bark Push Details</strong>
+</p>
+
+> The UI is designed for fast decision-making: select appointment type, choose a live location list, and monitor with earliest availability details visible in status/logs/notifications.
+
 ## Highlights
 
 - Supports `Written Test (56)` and `Road Test (55)`.
 - After choosing `Appointment Type`, the app fetches all live locations from DMV and lets you select one.
 - Real availability check per selected location.
+- Real click on `Check Earliest Availability` and extraction of earliest returned info (for example `February 26, 16 available`).
 - When availability is found:
   - green success logs in UI
   - desktop notification
   - Bark push notification (with location, status, check time, earliest info)
-- Real click on `Check Earliest Availability` and extraction of earliest returned info (for example `February 26, 16 available`).
 - Build is test-gated: tests must pass before packaging.
 
 ## Requirements

@@ -1,4 +1,4 @@
-# DMV Appointment Monitor（中文）
+﻿# DMV Appointment Monitor（中文）
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
@@ -6,16 +6,28 @@
 
 这是一个基于 Electron + Playwright 的桌面程序，用于监控 Kentucky DMV 预约可用性。
 
+## 功能截图
+
+<p align="center">
+  <img src="./docs/images/app-screenshot.png" alt="DMV Appointment Monitor 功能截图" width="1100" />
+</p>
+
+<p align="center">
+  <strong>实时预约点列表</strong> · <strong>真实 Earliest 查询</strong> · <strong>绿色成功日志</strong> · <strong>Bark 详细推送</strong>
+</p>
+
+> 界面目标是“快速做决定”：先选预约类型，再从实时抓取的预约点中选择，随后在状态区、日志区和推送中同时看到最早可用信息。
+
 ## 功能概览
 
 - 支持 `Written Test (56)` 和 `Road Test (55)`。
 - 选择 `Appointment Type` 后，会实时抓取该类型下所有预约点，并生成可选列表。
 - 监控逻辑基于你选中的预约点执行（不是写死单一地点）。
+- 会真实点击 `Check Earliest Availability`，并提取返回的最早信息（例如 `February 26, 16 available`）。
 - 检测到可预约时：
   - UI 日志显示绿色成功记录
   - 发送桌面通知
   - 发送 Bark 推送（包含地点、状态、检查时间、最早信息）
-- 会真实点击 `Check Earliest Availability`，并提取返回的最早信息（例如 `February 26, 16 available`）。
 - 打包前强制先通过测试。
 
 ## 环境要求
