@@ -11,7 +11,6 @@ let consecutiveAvailable = 0;
 let consecutiveErrors = 0;
 const maxConsecutiveErrors = 3;
 const quickPageUrl = "https://telegov.egov.com/ksp/AppointmentWizard/55";
-const HARDCODED_BARK_KEY = "YqBTFXNoRFvRmWFERQJaCN";
 
 function now() {
   return new Date().toISOString().replace("T", " ").slice(0, 19);
@@ -280,7 +279,7 @@ ipcMain.handle("start-monitoring", async (_event, config) => {
     appointmentType: config.appointmentType === "road_test" ? "road_test" : "permit",
     headless: config.headless !== false,
     locationName: String(config.locationName || "").trim(),
-    barkKey: HARDCODED_BARK_KEY,
+    barkKey: String(config.barkKey || "").trim(),
     intervalSec
   };
 
@@ -313,9 +312,9 @@ ipcMain.handle("stop-monitoring", async () => {
   return { ok: true };
 });
 
-ipcMain.handle("test-bark", async () => {
+ipcMain.handle("test-bark", async (_event, barkKey) => {
   const result = await sendBarkNotification(
-    HARDCODED_BARK_KEY,
+    String(barkKey || "").trim(),
     "Test Notification",
     "This is a test notification from DMV monitor."
   );

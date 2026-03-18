@@ -53,6 +53,27 @@ npx playwright install chromium
 npm start
 ```
 
+## Download
+
+Windows builds are published in [GitHub Releases](https://github.com/agecspnt/louisville-dmv-appointment-monitor/releases).
+
+1. Open the latest release page.
+2. In `Assets`, download the Windows installer or portable package.
+3. Run the downloaded file on Windows.
+
+## Bark Setup
+
+This app can send Bark push notifications when an appointment becomes available.
+
+1. Install Bark on your iPhone and open the app.
+2. Copy your device key from Bark. The project sends notifications through `https://api.day.app/<your-key>/...`.
+3. Start the desktop app with `npm start`.
+4. Paste the key into the `Bark Key` field.
+5. Click `Test Bark` to verify that your phone can receive a test notification. If the field is empty, the test will fail.
+6. Start monitoring. When availability is detected, the app will send a Bark push with the location, status, check time, and earliest availability.
+
+Reference: [Bark official site](https://bark.day.app/#/)
+
 ## Scripts
 
 - `npm test`
@@ -84,7 +105,7 @@ Windows helper:
 
 ## Platform Support
 
-This project is now Windows-only for build and release workflows.
+This project is now Windows-only for build and release workflows. Download packaged builds from [Releases](https://github.com/agecspnt/louisville-dmv-appointment-monitor/releases).
 
 ## Star History
 

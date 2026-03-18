@@ -43,6 +43,27 @@ npx playwright install chromium
 npm start
 ```
 
+## 下载方式
+
+目前只提供 Windows 版本，请在 [GitHub Releases](https://github.com/agecspnt/louisville-dmv-appointment-monitor/releases) 下载。
+
+1. 打开最新的 release 页面。
+2. 在 `Assets` 里下载 Windows 安装包或便携版。
+3. 在 Windows 上运行下载好的文件。
+
+## Bark 配置
+
+这个项目在检测到可预约时，可以通过 Bark 发送推送通知。
+
+1. 在 iPhone 上安装并打开 Bark。
+2. 从 Bark 里复制你的设备 key。这个项目会通过 `https://api.day.app/<你的-key>/...` 发送通知。
+3. 运行桌面程序：`npm start`
+4. 把 key 粘贴到界面里的 `Bark Key` 输入框。
+5. 点击 `Test Bark`，确认手机能够收到测试通知。如果输入框为空，测试会失败。
+6. 开始监控。检测到可预约时，程序会把地点、状态、检查时间和最早可用信息推送到 Bark。
+
+参考： [Bark 官方页面](https://bark.day.app/#/)
+
 ## 常用脚本
 
 - `npm test`
@@ -74,7 +95,7 @@ Windows 一键脚本：
 
 ## 平台支持
 
-项目现已调整为仅支持 Windows 构建与发布流程。
+项目现已调整为仅支持 Windows 构建与发布流程，安装包请从 [Releases](https://github.com/agecspnt/louisville-dmv-appointment-monitor/releases) 下载。
 
 ## 贡献
 
