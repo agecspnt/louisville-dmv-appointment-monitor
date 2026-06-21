@@ -4,10 +4,18 @@ const els = {
   refreshLocationsBtn: document.getElementById("refreshLocationsBtn"),
   intervalSec: document.getElementById("intervalSec"),
   headless: document.getElementById("headless"),
+  autoBook: document.getElementById("autoBook"),
+  autoSubmit: document.getElementById("autoSubmit"),
+  firstName: document.getElementById("firstName"),
+  lastName: document.getElementById("lastName"),
+  email: document.getElementById("email"),
+  phone: document.getElementById("phone"),
+  receiveTexts: document.getElementById("receiveTexts"),
   barkKey: document.getElementById("barkKey"),
   startBtn: document.getElementById("startBtn"),
   stopBtn: document.getElementById("stopBtn"),
   checkBtn: document.getElementById("checkBtn"),
+  bookNowBtn: document.getElementById("bookNowBtn"),
   openPageBtn: document.getElementById("openPageBtn"),
   testBarkBtn: document.getElementById("testBarkBtn"),
   statusText: document.getElementById("statusText"),
@@ -23,8 +31,30 @@ function cfg() {
     locationName: (els.locationName.value || "").trim(),
     intervalSec: Number(els.intervalSec.value || 60),
     headless: Boolean(els.headless.checked),
-    barkKey: (els.barkKey.value || "").trim()
+    barkKey: (els.barkKey.value || "").trim(),
+    autoBook: Boolean(els.autoBook.checked),
+    autoSubmit: Boolean(els.autoSubmit.checked),
+    applicant: {
+      firstName: (els.firstName.value || "").trim(),
+      lastName: (els.lastName.value || "").trim(),
+      email: (els.email.value || "").trim(),
+      phone: (els.phone.value || "").trim(),
+      receiveTexts: Boolean(els.receiveTexts.checked)
+    }
   };
+}
+
+function validateApplicantConfig(config, requireApplicant) {
+  if (!requireApplicant) {
+    return null;
+  }
+
+  const missing = [];
+  if (!config.applicant.firstName) missing.push("First Name");
+  if (!config.applicant.lastName) missing.push("Last Name");
+  if (!config.applicant.email) missing.push("Email");
+  if (!config.applicant.phone) missing.push("Phone");
+  return missing.length > 0 ? `Please fill: ${missing.join(", ")}` : null;
 }
 
 function logLine(payload) {
@@ -56,6 +86,7 @@ function setAvailability(availability) {
 function setRunningState(isRunning) {
   els.startBtn.disabled = isRunning;
   els.stopBtn.disabled = !isRunning;
+  els.bookNowBtn.disabled = isRunning;
   els.appointmentType.disabled = isRunning;
   els.locationName.disabled = isRunning || els.locationName.options.length === 0;
   els.refreshLocationsBtn.disabled = isRunning;
@@ -114,7 +145,8 @@ async function loadLocations() {
 }
 
 els.startBtn.addEventListener("click", async () => {
-  const interval = Number(els.intervalSec.value || 60);
+  const config = cfg();
+  const interval = Number(config.intervalSec || 60);
   if (!Number.isFinite(interval) || interval < 1) {
     alert("Interval must be >= 1");
     return;
@@ -124,7 +156,13 @@ els.startBtn.addEventListener("click", async () => {
     return;
   }
 
-  const res = await window.monitorApi.startMonitoring(cfg());
+  const applicantError = validateApplicantConfig(config, config.autoBook);
+  if (applicantError) {
+    alert(applicantError);
+    return;
+  }
+
+  const res = await window.monitorApi.startMonitoring(config);
   if (!res.ok) {
     alert(res.error || "Failed to start");
   }
@@ -148,6 +186,39 @@ els.checkBtn.addEventListener("click", async () => {
     }
   } finally {
     els.checkBtn.disabled = false;
+  }
+});
+
+els.bookNowBtn.addEventListener("click", async () => {
+  const config = cfg();
+  if (!config.locationName) {
+    alert("Please select an appointment location");
+    return;
+  }
+
+  const applicantError = validateApplicantConfig(config, true);
+  if (applicantError) {
+    alert(applicantError);
+    return;
+  }
+
+  if (!window.confirm("Book the earliest available appointment now?")) {
+    return;
+  }
+
+  els.bookNowBtn.disabled = true;
+  try {
+    const res = await window.monitorApi.bookNow(config);
+    if (!res.ok) {
+      alert(res.error || "Immediate booking failed");
+      return;
+    }
+
+    const confirmation = res.result?.confirmationNumber ? `\nConfirmation: ${res.result.confirmationNumber}` : "";
+    const slot = res.result?.slot?.slotLabel ? `\nSlot: ${res.result.slot.slotLabel}` : "";
+    alert(`Booking flow completed.${slot}${confirmation}`);
+  } finally {
+    els.bookNowBtn.disabled = false;
   }
 });
 

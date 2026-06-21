@@ -172,6 +172,32 @@ function extractLocationsFromRawTexts(rawTexts, typeName) {
   return locations;
 }
 
+function normalizeApplicant(applicant = {}) {
+  return {
+    firstName: String(applicant.firstName || "").trim(),
+    lastName: String(applicant.lastName || "").trim(),
+    email: String(applicant.email || "").trim(),
+    phone: String(applicant.phone || "").trim(),
+    receiveTexts: Boolean(applicant.receiveTexts)
+  };
+}
+
+function validateApplicant(applicant = {}) {
+  const normalized = normalizeApplicant(applicant);
+  const missing = [];
+
+  if (!normalized.firstName) missing.push("firstName");
+  if (!normalized.lastName) missing.push("lastName");
+  if (!normalized.email) missing.push("email");
+  if (!normalized.phone) missing.push("phone");
+
+  return {
+    ok: missing.length === 0,
+    applicant: normalized,
+    missing
+  };
+}
+
 class AppointmentMonitorService {
   constructor(config, logger = () => {}) {
     this.appointmentType = config.appointmentType === "road_test" ? "road_test" : "permit";
@@ -207,6 +233,14 @@ class AppointmentMonitorService {
     this.log(`Browser initialized (${this.headless ? "headless" : "headed"})`, "success");
   }
 
+  async createContext() {
+    await this.ensureBrowser();
+    return this.browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    });
+  }
+
   async parseTarget(page) {
     const rawTexts = await page.evaluate(() =>
       Array.from(document.querySelectorAll("div")).map((el) => (el.textContent || "").replace(/\s+/g, " ").trim())
@@ -225,11 +259,7 @@ class AppointmentMonitorService {
   }
 
   async fetchLocations() {
-    await this.ensureBrowser();
-    const context = await this.browser.newContext({
-      userAgent:
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    });
+    const context = await this.createContext();
     const page = await context.newPage();
 
     try {
@@ -333,11 +363,7 @@ class AppointmentMonitorService {
   }
 
   async checkAvailability() {
-    await this.ensureBrowser();
-    const context = await this.browser.newContext({
-      userAgent:
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    });
+    const context = await this.createContext();
     const page = await context.newPage();
 
     try {
@@ -386,10 +412,241 @@ class AppointmentMonitorService {
       this.log("Browser closed", "info");
     }
   }
+
+  async openApplicantInfoPage(page) {
+    const locationNeedle = this.locationName.toLowerCase();
+
+    const selection = await page.evaluate(({ locationNeedle }) => {
+      const normalize = (txt) => (txt || "").replace(/\s+/g, " ").trim().toLowerCase();
+      const blocks = Array.from(document.querySelectorAll("#locationsDiv > div, #locationListColumn #locationsDiv > div"));
+      const block = blocks.find((item) => normalize(item.textContent || "").includes(locationNeedle));
+      if (!block) {
+        return { ok: false, error: "Location block not found" };
+      }
+
+      const link = Array.from(block.querySelectorAll("a")).find((item) =>
+        /Select In Person Appointment/i.test((item.textContent || "").replace(/\s+/g, " ").trim())
+      );
+      if (!link) {
+        return {
+          ok: false,
+          error: "No in-person appointment link found",
+          blockText: (block.textContent || "").replace(/\s+/g, " ").trim()
+        };
+      }
+
+      return {
+        ok: true,
+        href: link.getAttribute("href") || "",
+        onclick: link.getAttribute("onclick") || "",
+        label: (link.textContent || "").replace(/\s+/g, " ").trim()
+      };
+    }, { locationNeedle });
+
+    if (!selection.ok) {
+      throw new Error(selection.error || "Failed to locate appointment link");
+    }
+
+    if (/^javascript:/i.test(selection.href || "")) {
+      const jsCode = String(selection.href || "").replace(/^javascript:/i, "");
+      await page.evaluate((code) => {
+        // eslint-disable-next-line no-eval
+        return window.eval(code);
+      }, jsCode);
+      await page.waitForLoadState("domcontentloaded");
+    } else if (selection.href) {
+      await page.goto(new URL(selection.href, page.url()).toString(), {
+        waitUntil: "domcontentloaded",
+        timeout: 35000
+      });
+    } else if (selection.onclick) {
+      await page.evaluate((code) => {
+        // eslint-disable-next-line no-eval
+        return window.eval(code);
+      }, selection.onclick);
+      await page.waitForLoadState("domcontentloaded");
+    } else {
+      throw new Error("Appointment link did not include a target URL");
+    }
+
+    await page.waitForTimeout(1200);
+    await page.waitForSelector("a.showReservationModal", { timeout: 12000 });
+
+    const slot = await page.evaluate(() => {
+      const first = document.querySelector("a.showReservationModal");
+      return first ? (first.textContent || "").replace(/\s+/g, " ").trim() : "";
+    });
+
+    if (!slot) {
+      throw new Error("No available timeslot found after opening appointment page");
+    }
+
+    await page.locator("a.showReservationModal").first().click();
+    await page.waitForSelector("#continueReservation", { timeout: 12000 });
+
+    const modalMeta = await page.evaluate(() => ({
+      date: document.querySelector("#Date")?.value || "",
+      time: document.querySelector("#Time")?.value || "",
+      redirectUrl: document.querySelector("#RedirectUrl")?.value || ""
+    }));
+
+    await page.locator("#continueReservation").click();
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1200);
+    await page.waitForSelector("#createForm", { timeout: 12000 });
+
+    return {
+      slotLabel: slot,
+      date: modalMeta.date,
+      time: modalMeta.time,
+      redirectUrl: modalMeta.redirectUrl
+    };
+  }
+
+  async fillApplicantForm(page, applicant) {
+    await page.fill("#firstName", applicant.firstName);
+    await page.fill("#lastName", applicant.lastName);
+    await page.fill("#email", applicant.email);
+    await page.fill("#phone", applicant.phone);
+
+    const receiveTexts = page.locator("#Customer_ReceiveTexts");
+    if (await receiveTexts.count()) {
+      if (applicant.receiveTexts) {
+        await receiveTexts.check().catch(() => {});
+      } else {
+        await receiveTexts.uncheck().catch(() => {});
+      }
+    }
+  }
+
+  async submitApplicantForm(page) {
+    const submitButton = page.locator("#btnSubmitEdit");
+    const buttonCount = await submitButton.count();
+    const isVisible = buttonCount > 0 ? await submitButton.isVisible().catch(() => false) : false;
+
+    if (isVisible) {
+      await submitButton.click();
+    } else {
+      await page.evaluate(() => {
+        const form = document.querySelector("#createForm");
+        if (!form) {
+          throw new Error("Appointment form not found");
+        }
+        if (typeof form.requestSubmit === "function") {
+          form.requestSubmit();
+          return;
+        }
+        form.submit();
+      });
+    }
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1500);
+
+    const result = await page.evaluate(() => {
+      const bodyText = (document.body?.innerText || "").replace(/\s+/g, " ").trim();
+      const errors = Array.from(
+        document.querySelectorAll(".validation-summary-errors, .field-validation-error, .input-validation-error")
+      )
+        .map((el) => (el.textContent || "").replace(/\s+/g, " ").trim())
+        .filter(Boolean);
+
+      const confirmationMatch = bodyText.match(/Confirmation(?:\s+Number)?\s*[:#]?\s*([A-Z0-9-]{4,})/i);
+
+      return {
+        url: window.location.href,
+        bodyText,
+        errors,
+        confirmationNumber: confirmationMatch ? confirmationMatch[1] : null
+      };
+    });
+
+    if (result.errors.length > 0) {
+      return {
+        ok: false,
+        submitted: false,
+        errors: result.errors,
+        url: result.url
+      };
+    }
+
+    const looksConfirmed =
+      Boolean(result.confirmationNumber) ||
+      /Appointment (?:Confirmation|Confirmed)|Confirmation Number|Cancel Appointment/i.test(result.bodyText);
+
+    return {
+      ok: looksConfirmed,
+      submitted: looksConfirmed,
+      confirmationNumber: result.confirmationNumber,
+      url: result.url,
+      bodyPreview: result.bodyText.slice(0, 800)
+    };
+  }
+
+  async bookAppointment(options = {}) {
+    const { applicant = {}, submit = true } = options;
+    const validated = validateApplicant(applicant);
+    if (!validated.ok) {
+      return {
+        ok: false,
+        submitted: false,
+        error: `Missing applicant fields: ${validated.missing.join(", ")}`
+      };
+    }
+
+    const context = await this.createContext();
+    const page = await context.newPage();
+
+    try {
+      await page.goto(this.url, { waitUntil: "domcontentloaded", timeout: 35000 });
+      await page.waitForTimeout(1200);
+
+      const parsed = await this.parseTarget(page);
+      if (!parsed.found) {
+        return {
+          ok: false,
+          submitted: false,
+          error: "Location not found on page"
+        };
+      }
+
+      if (parsed.available !== true) {
+        return {
+          ok: false,
+          submitted: false,
+          error: "No available appointment at the selected location"
+        };
+      }
+
+      const slot = await this.openApplicantInfoPage(page);
+      await this.fillApplicantForm(page, validated.applicant);
+
+      if (!submit) {
+        return {
+          ok: true,
+          submitted: false,
+          reserved: true,
+          locationName: this.locationName,
+          slot
+        };
+      }
+
+      const submitResult = await this.submitApplicantForm(page);
+      return {
+        ...submitResult,
+        reserved: true,
+        locationName: this.locationName,
+        slot
+      };
+    } finally {
+      await page.close().catch(() => {});
+      await context.close().catch(() => {});
+    }
+  }
 }
 
 module.exports = {
   AppointmentMonitorService,
+  validateApplicant,
   getJitterSpan,
   getNextInterval,
   evaluateAvailabilityFromText,

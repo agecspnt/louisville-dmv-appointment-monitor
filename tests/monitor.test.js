@@ -8,7 +8,8 @@ const {
   extractEarliestDateTime,
   extractLocationName,
   extractLocationsFromRawTexts,
-  pickBestTargetBlock
+  pickBestTargetBlock,
+  validateApplicant
 } = require("../src/services/monitor");
 
 test("getJitterSpan should scale with base interval", () => {
@@ -107,4 +108,21 @@ test("extractEarliestDateTime should parse month date with available count", () 
 test("extractEarliestDateTime should parse numeric date with time", () => {
   const txt = "Next slot 03/14/2026 9:25 AM is available";
   assert.equal(extractEarliestDateTime(txt), "03/14/2026 9:25 AM");
+});
+
+test("validateApplicant should require all applicant fields", () => {
+  const invalid = validateApplicant({ firstName: "Ada", email: "ada@example.com" });
+  assert.equal(invalid.ok, false);
+  assert.deepEqual(invalid.missing, ["lastName", "phone"]);
+
+  const valid = validateApplicant({
+    firstName: "Ada",
+    lastName: "Lovelace",
+    email: "ada@example.com",
+    phone: "5551234567",
+    receiveTexts: true
+  });
+  assert.equal(valid.ok, true);
+  assert.deepEqual(valid.missing, []);
+  assert.equal(valid.applicant.receiveTexts, true);
 });

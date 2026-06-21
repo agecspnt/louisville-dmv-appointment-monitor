@@ -9,6 +9,7 @@ let monitorService = null;
 let monitorConfig = null;
 let consecutiveAvailable = 0;
 let consecutiveErrors = 0;
+let bookingInProgress = false;
 const maxConsecutiveErrors = 3;
 const quickPageUrl = "https://telegov.egov.com/ksp/AppointmentWizard/55";
 
@@ -73,6 +74,7 @@ async function stopMonitoringInternal(reason = "manual") {
   running = false;
   consecutiveAvailable = 0;
   consecutiveErrors = 0;
+  bookingInProgress = false;
 
   if (monitorTimer) {
     clearTimeout(monitorTimer);
@@ -133,6 +135,44 @@ async function checkAndSchedule() {
           log("Desktop notification sent", "success");
         } else {
           log(`Desktop notification skipped: ${desktopRes.error}`, "warning");
+        }
+
+        if (monitorConfig.autoBook && !bookingInProgress) {
+          bookingInProgress = true;
+          log("Auto-book is enabled, attempting to reserve the earliest slot...", "warning");
+          try {
+            const booking = await monitorService.bookAppointment({
+              applicant: monitorConfig.applicant,
+              submit: monitorConfig.autoSubmit !== false
+            });
+
+            if (booking.ok && booking.submitted) {
+              log(
+                `Appointment booked successfully${booking.confirmationNumber ? ` (confirmation: ${booking.confirmationNumber})` : ""}`,
+                "success"
+              );
+              updateStatus("Booked successfully", true, {
+                earliestTime: booking.slot?.slotLabel || result.earliestTime || null
+              });
+              await stopMonitoringInternal("booked");
+              return;
+            }
+
+            if (booking.ok && booking.reserved && booking.submitted === false) {
+              log("Slot reserved and applicant info filled. Waiting for final manual review.", "warning");
+              updateStatus("Slot reserved", true, {
+                earliestTime: booking.slot?.slotLabel || result.earliestTime || null
+              });
+              await stopMonitoringInternal("slot_reserved");
+              return;
+            }
+
+            log(`Auto-book attempt failed: ${booking.error || booking.errors?.join("; ") || "Unknown error"}`, "error");
+          } catch (bookingErr) {
+            log(`Auto-book exception: ${String(bookingErr)}`, "error");
+          } finally {
+            bookingInProgress = false;
+          }
         }
       }
     } else if (result.found && result.available === false) {
@@ -280,6 +320,15 @@ ipcMain.handle("start-monitoring", async (_event, config) => {
     headless: config.headless !== false,
     locationName: String(config.locationName || "").trim(),
     barkKey: String(config.barkKey || "").trim(),
+    autoBook: Boolean(config.autoBook),
+    autoSubmit: config.autoSubmit !== false,
+    applicant: {
+      firstName: String(config.applicant?.firstName || "").trim(),
+      lastName: String(config.applicant?.lastName || "").trim(),
+      email: String(config.applicant?.email || "").trim(),
+      phone: String(config.applicant?.phone || "").trim(),
+      receiveTexts: Boolean(config.applicant?.receiveTexts)
+    },
     intervalSec
   };
 
@@ -288,6 +337,9 @@ ipcMain.handle("start-monitoring", async (_event, config) => {
   log(`Location: ${monitorConfig.locationName || "N/A"}`, "info");
   log(`Base interval: ${intervalSec}s`, "info");
   log(`Random interval: ${Math.max(1, intervalSec - jitter)} - ${intervalSec + jitter}s`, "info");
+  if (monitorConfig.autoBook) {
+    log(`Auto-book: enabled (${monitorConfig.autoSubmit ? "auto-submit" : "fill-only"})`, "warning");
+  }
 
   monitorService = new AppointmentMonitorService(monitorConfig, log);
   running = true;
@@ -336,6 +388,44 @@ ipcMain.handle("fetch-locations", async (_event, config) => {
   } catch (err) {
     log(`Fetch locations failed: ${String(err)}`, "error");
     return { ok: false, error: String(err), locations: [] };
+  } finally {
+    await service.cleanup();
+  }
+});
+
+ipcMain.handle("book-now", async (_event, config) => {
+  const service = new AppointmentMonitorService(config || {}, log);
+  try {
+    log(`Attempting immediate booking for ${service.locationName || "selected location"}...`, "warning");
+    const result = await service.bookAppointment({
+      applicant: config?.applicant || {},
+      submit: config?.autoSubmit !== false
+    });
+
+    if (result.ok && result.submitted) {
+      log(
+        `Immediate booking succeeded${result.confirmationNumber ? ` (confirmation: ${result.confirmationNumber})` : ""}`,
+        "success"
+      );
+      updateStatus("Booked successfully", true, {
+        earliestTime: result.slot?.slotLabel || null
+      });
+      return { ok: true, result };
+    }
+
+    if (result.ok && result.reserved && result.submitted === false) {
+      log("Immediate booking reserved a slot and filled the form.", "warning");
+      updateStatus("Slot reserved", true, {
+        earliestTime: result.slot?.slotLabel || null
+      });
+      return { ok: true, result };
+    }
+
+    log(`Immediate booking failed: ${result.error || result.errors?.join("; ") || "Unknown error"}`, "error");
+    return { ok: false, error: result.error || result.errors?.join("; ") || "Immediate booking failed", result };
+  } catch (err) {
+    log(`Immediate booking exception: ${String(err)}`, "error");
+    return { ok: false, error: String(err) };
   } finally {
     await service.cleanup();
   }

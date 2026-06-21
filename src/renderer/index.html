@@ -37,6 +37,43 @@
           <input id="headless" type="checkbox" checked />
         </div>
 
+        <div class="row">
+          <label for="autoBook">Auto Book</label>
+          <input id="autoBook" type="checkbox" />
+        </div>
+
+        <div class="row">
+          <label for="autoSubmit">Auto Submit</label>
+          <input id="autoSubmit" type="checkbox" checked />
+        </div>
+
+        <div class="section-title">Applicant Info (memory only)</div>
+
+        <div class="row">
+          <label for="firstName">First Name</label>
+          <input id="firstName" type="text" placeholder="Given name" />
+        </div>
+
+        <div class="row">
+          <label for="lastName">Last Name</label>
+          <input id="lastName" type="text" placeholder="Family name" />
+        </div>
+
+        <div class="row">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="name@example.com" />
+        </div>
+
+        <div class="row">
+          <label for="phone">Phone</label>
+          <input id="phone" type="tel" placeholder="Phone number" />
+        </div>
+
+        <div class="row">
+          <label for="receiveTexts">Receive Texts</label>
+          <input id="receiveTexts" type="checkbox" />
+        </div>
+
         <div class="row grow">
           <label for="barkKey">Bark Key</label>
           <input id="barkKey" type="text" placeholder="Paste your Bark device key" />
@@ -47,6 +84,7 @@
           <button id="startBtn" class="btn primary">Start Monitoring</button>
           <button id="stopBtn" class="btn danger" disabled>Stop</button>
           <button id="checkBtn" class="btn secondary">Check Once</button>
+          <button id="bookNowBtn" class="btn warning">Book Earliest Now</button>
           <button id="openPageBtn" class="btn secondary">Open DMV Page</button>
         </div>
       </section>

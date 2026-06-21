@@ -9,6 +9,7 @@
   --secondary: #344054;
   --success: #067647;
   --warning: #b54708;
+  --warning-bg: #b45309;
 }
 
 * {
@@ -83,6 +84,12 @@ select {
   flex-wrap: wrap;
 }
 
+.section-title {
+  margin-top: 6px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .btn {
   border: 0;
   border-radius: 8px;
@@ -106,6 +113,10 @@ select {
 
 .btn.danger {
   background: var(--danger);
+}
+
+.btn.warning {
+  background: var(--warning-bg);
 }
 
 .status {
