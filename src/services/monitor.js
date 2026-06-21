@@ -1,3 +1,26 @@
+const fs = require("fs");
+const path = require("path");
+
+function configurePlaywrightBrowsersPath() {
+  if (process.env.PLAYWRIGHT_BROWSERS_PATH) {
+    return;
+  }
+
+  try {
+    const playwrightCorePackage = require.resolve("playwright-core/package.json");
+    const playwrightCoreDir = path.dirname(playwrightCorePackage);
+    const hermeticBrowsersPath = path.join(playwrightCoreDir, ".local-browsers");
+
+    if (fs.existsSync(hermeticBrowsersPath)) {
+      process.env.PLAYWRIGHT_BROWSERS_PATH = hermeticBrowsersPath;
+    }
+  } catch (_err) {
+    // Ignore and let Playwright fall back to its default lookup behavior.
+  }
+}
+
+configurePlaywrightBrowsersPath();
+
 const { chromium } = require("playwright");
 
 function now() {
