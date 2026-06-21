@@ -14,7 +14,7 @@
 
 English (default) | [简体中文](./README.zh-CN.md)
 
-Desktop app built with Electron + Playwright to monitor Kentucky DMV appointment availability.
+Desktop app built with Electron + Playwright to monitor Kentucky DMV appointment availability and optionally auto-book real appointment slots.
 
 ## App Preview
 
@@ -23,7 +23,7 @@ Desktop app built with Electron + Playwright to monitor Kentucky DMV appointment
 </p>
 
 <p align="center">
-  <strong>Live Location Picker</strong> · <strong>Real Earliest Lookup</strong> · <strong>Green Success Logs</strong> · <strong>Bark Push Details</strong>
+  <strong>Live Location Picker</strong> · <strong>Real Earliest Lookup</strong> · <strong>Auto Book / Auto Submit</strong> · <strong>Bark Push Details</strong>
 </p>
 
 > The UI is designed for fast decision-making: select appointment type, choose a live location list, and monitor with earliest availability details visible in status/logs/notifications.
@@ -34,10 +34,18 @@ Desktop app built with Electron + Playwright to monitor Kentucky DMV appointment
 - After choosing `Appointment Type`, the app fetches all live locations from DMV and lets you select one.
 - Real availability check per selected location.
 - Real click on `Check Earliest Availability` and extraction of earliest returned info (for example `February 26, 16 available`).
+- Optional real auto-booking flow:
+  - open the selected location
+  - choose the earliest available in-person slot
+  - fill applicant information
+  - optionally auto-submit the reservation
+- `Book Earliest Now` button for immediate booking attempts without waiting for the scheduler.
+- Applicant information is kept in memory only for the current app session.
 - When availability is found:
   - green success logs in UI
   - desktop notification
   - Bark push notification (with location, status, check time, earliest info)
+- Windows release builds now bundle the required Playwright Chromium runtime instead of depending on a per-user cache.
 - Build is test-gated: tests must pass before packaging.
 
 ## Requirements
@@ -49,7 +57,7 @@ Desktop app built with Electron + Playwright to monitor Kentucky DMV appointment
 
 ```bash
 npm install
-npx playwright install chromium
+npm run install:browsers
 npm start
 ```
 
@@ -59,7 +67,29 @@ Windows builds are published in [GitHub Releases](https://github.com/agecspnt/lo
 
 1. Open the latest release page.
 2. In `Assets`, download the Windows installer or portable package.
-3. Run the downloaded file on Windows.
+3. Run the downloaded file on Windows. As of `v1.0.2`, the release bundles Chromium so the app does not rely on an existing Playwright cache on that machine.
+
+## Auto-booking Setup
+
+1. Select `Road Test (55)` or `Written Test (56)`.
+2. Pick a live appointment location.
+3. Fill in applicant info:
+   - `First Name`
+   - `Last Name`
+   - `Email`
+   - `Phone`
+   - `Receive Texts` (optional)
+4. Choose one mode:
+   - `Auto Book` + `Auto Submit` = monitor and automatically submit when a slot is found.
+   - `Auto Book` only = monitor, reserve the slot, fill the form, and stop before final submission.
+5. Use `Book Earliest Now` if you want to immediately attempt the earliest available slot at the currently selected location.
+
+## Important Notes About Auto-booking
+
+- Auto-booking follows the live Kentucky DMV flow. It can create a real appointment.
+- `Auto Submit` should only be enabled when you are comfortable with the app submitting the reservation on your behalf.
+- Availability can disappear between detection and submission if another user takes the slot first.
+- Some locations still have special county restrictions or call-in-only rules shown by the DMV site.
 
 ## Bark Setup
 
@@ -76,6 +106,8 @@ Reference: [Bark official site](https://bark.day.app/#/)
 
 ## Scripts
 
+- `npm run install:browsers`
+  Installs Chromium into a hermetic local Playwright folder used for packaged Windows builds.
 - `npm test`
   Runs all tests, including live DMV web integration test.
 - `npm run test:live`
@@ -94,7 +126,7 @@ Windows helper:
 
 - `electron/main.js`: scheduler, notifications, IPC handlers
 - `electron/preload.js`: renderer bridge API
-- `src/services/monitor.js`: scraping, parsing, location/availability logic
+- `src/services/monitor.js`: scraping, parsing, location/availability logic, and real booking flow
 - `src/renderer/*`: UI
 - `tests/*.test.js`: unit and live integration tests
 

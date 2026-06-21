@@ -39,8 +39,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [2/5] Installing Playwright Chromium...
-call npx playwright install chromium
+echo [2/5] Installing hermetic Playwright Chromium...
+call npm run install:browsers
 if errorlevel 1 (
     echo ERROR: playwright install failed.
     pause

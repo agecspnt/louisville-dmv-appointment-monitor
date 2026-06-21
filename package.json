@@ -1,6 +1,6 @@
 {
   "name": "dmv-appointment-monitor-electron",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Desktop monitor for Kentucky DMV appointment availability (Electron + Playwright)",
   "main": "electron/main.js",
   "author": "DMV Appointment Monitor contributors",
@@ -18,9 +18,10 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
+    "install:browsers": "node scripts/install-playwright-hermetic.mjs",
     "test": "node --test",
     "test:live": "node --test tests/live.integration.test.js",
-    "build:win": "npm test && electron-builder --publish never --win nsis portable",
+    "build:win": "npm run install:browsers && npm test && electron-builder --publish never --win nsis portable",
     "build:all": "node scripts/build-all.mjs"
   },
   "build": {
@@ -32,7 +33,15 @@
     "files": [
       "electron/**/*",
       "src/**/*",
-      "package.json"
+      "scripts/**/*",
+      "package.json",
+      "!node_modules/**/.local-browsers/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "node_modules/playwright-core/.local-browsers",
+        "to": "ms-playwright"
+      }
     ],
     "asar": true,
     "win": {

@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on Keep a Changelog and this project follows Semantic
 Versioning.
 
+## [1.0.2] - 2026-06-21
+
+### Added
+
+- Real auto-booking flow that can open a live DMV slot, fill applicant details, and optionally auto-submit.
+- `Book Earliest Now` action for immediate booking attempts.
+- In-app applicant fields for first name, last name, email, phone, and text message preference.
+
+### Changed
+
+- Windows release builds now bundle a hermetic Playwright Chromium runtime so packaged apps do not depend on a per-user browser cache.
+- Build scripts, CI workflows, and release workflows now install Playwright browsers through the hermetic packaging path.
+- README documentation updated for auto-booking and Windows packaging behavior.
+
 ## [1.0.0] - 2026-02-23
 
 ### Added

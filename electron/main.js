@@ -1,5 +1,12 @@
 const path = require("path");
+const fs = require("fs");
 const { app, BrowserWindow, ipcMain, Notification } = require("electron");
+
+const packagedPlaywrightBrowsersPath = path.join(process.resourcesPath, "ms-playwright");
+if (fs.existsSync(packagedPlaywrightBrowsersPath)) {
+  process.env.PLAYWRIGHT_BROWSERS_PATH = packagedPlaywrightBrowsersPath;
+}
+
 const { AppointmentMonitorService, getJitterSpan, getNextInterval } = require("../src/services/monitor");
 
 let mainWindow = null;
