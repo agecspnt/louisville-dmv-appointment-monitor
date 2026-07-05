@@ -1,6 +1,6 @@
 {
   "name": "dmv-appointment-monitor-electron",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Desktop monitor for Kentucky DMV appointment availability (Electron + Playwright)",
   "main": "electron/main.js",
   "author": "DMV Appointment Monitor contributors",

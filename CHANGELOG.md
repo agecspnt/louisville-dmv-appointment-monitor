@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on Keep a Changelog and this project follows Semantic
 Versioning.
 
+## [1.0.3] - 2026-07-05
+
+### Fixed
+
+- Fixed an auto-booking navigation race where the DMV page could navigate while Playwright was still evaluating the `Select In Person Appointment` JavaScript link.
+
 ## [1.0.2] - 2026-06-21
 
 ### Added
