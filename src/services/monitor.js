@@ -437,59 +437,34 @@ class AppointmentMonitorService {
   }
 
   async openApplicantInfoPage(page) {
-    const locationNeedle = this.locationName.toLowerCase();
+    const locationBlock = page
+      .locator("#locationsDiv > div, #locationListColumn #locationsDiv > div")
+      .filter({ hasText: this.locationName })
+      .first();
 
-    const selection = await page.evaluate(({ locationNeedle }) => {
-      const normalize = (txt) => (txt || "").replace(/\s+/g, " ").trim().toLowerCase();
-      const blocks = Array.from(document.querySelectorAll("#locationsDiv > div, #locationListColumn #locationsDiv > div"));
-      const block = blocks.find((item) => normalize(item.textContent || "").includes(locationNeedle));
-      if (!block) {
-        return { ok: false, error: "Location block not found" };
-      }
-
-      const link = Array.from(block.querySelectorAll("a")).find((item) =>
-        /Select In Person Appointment/i.test((item.textContent || "").replace(/\s+/g, " ").trim())
-      );
-      if (!link) {
-        return {
-          ok: false,
-          error: "No in-person appointment link found",
-          blockText: (block.textContent || "").replace(/\s+/g, " ").trim()
-        };
-      }
-
-      return {
-        ok: true,
-        href: link.getAttribute("href") || "",
-        onclick: link.getAttribute("onclick") || "",
-        label: (link.textContent || "").replace(/\s+/g, " ").trim()
-      };
-    }, { locationNeedle });
-
-    if (!selection.ok) {
-      throw new Error(selection.error || "Failed to locate appointment link");
+    if ((await locationBlock.count()) === 0) {
+      throw new Error("Location block not found");
     }
 
-    if (/^javascript:/i.test(selection.href || "")) {
-      const jsCode = String(selection.href || "").replace(/^javascript:/i, "");
-      await page.evaluate((code) => {
-        // eslint-disable-next-line no-eval
-        return window.eval(code);
-      }, jsCode);
-      await page.waitForLoadState("domcontentloaded");
-    } else if (selection.href) {
-      await page.goto(new URL(selection.href, page.url()).toString(), {
+    const inPersonLink = locationBlock.locator("a").filter({ hasText: /Select In Person Appointment/i }).first();
+    if ((await inPersonLink.count()) === 0) {
+      throw new Error("No in-person appointment link found");
+    }
+
+    const beforeUrl = page.url();
+    const navigation = page
+      .waitForURL((url) => url.toString() !== beforeUrl, {
         waitUntil: "domcontentloaded",
         timeout: 35000
-      });
-    } else if (selection.onclick) {
-      await page.evaluate((code) => {
-        // eslint-disable-next-line no-eval
-        return window.eval(code);
-      }, selection.onclick);
-      await page.waitForLoadState("domcontentloaded");
-    } else {
-      throw new Error("Appointment link did not include a target URL");
+      })
+      .then(() => true)
+      .catch(() => false);
+
+    await inPersonLink.click();
+
+    const navigated = await navigation;
+    if (!navigated && page.url() === beforeUrl) {
+      throw new Error("Appointment link did not navigate to the date/time page");
     }
 
     await page.waitForTimeout(1200);
