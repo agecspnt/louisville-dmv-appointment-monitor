@@ -52,7 +52,7 @@
     }
   },
   "dependencies": {
-    "playwright": "^1.53.1"
+    "playwright": "^1.60.0"
   },
   "devDependencies": {
     "electron": "^37.2.6",
